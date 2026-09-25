@@ -9,6 +9,13 @@ pub enum Phase {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ActivePhase {
+    Confirming,
+    Heating,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum HeatingCheckpoint {
     HeatingEnded,
@@ -35,13 +42,13 @@ pub struct ActiveEntry {
     pub id: String,
     pub name: String,
     pub session_token_hash: String,
-    pub phase: Phase,
+    pub phase: ActivePhase,
     pub phase_started_at: u64,
     pub deadline: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub push_subscription: Option<PushSubscriptionRecord>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub notified_checkpoints: Option<HeatingCheckpoint>,
+    pub notified_checkpoints: Option<Vec<HeatingCheckpoint>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,8 +74,7 @@ pub struct SeatWaitlistEntry {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueueState {
-    pub version: u16,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: u64,
     pub active: Option<ActiveEntry>,
     pub waiting: Vec<WaitingEntry>,
     pub seat_waitlist: Vec<SeatWaitlistEntry>,
