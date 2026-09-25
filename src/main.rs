@@ -10,6 +10,8 @@ use tower_http::{
     trace::TraceLayer,
 };
 
+mod queue;
+
 #[derive(Clone)]
 struct AppState {
     config: Config,
