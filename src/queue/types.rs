@@ -67,9 +67,9 @@ pub struct SeatWaitlistEntry {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueueState {
-    version: u16,
+    pub version: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
-    active: Option<ActiveEntry>,
-    waiting: Vec<WaitingEntry>,
-    seat_waitlist: Vec<SeatWaitlistEntry>,
+    pub active: Option<ActiveEntry>,
+    pub waiting: Vec<WaitingEntry>,
+    pub seat_waitlist: Vec<SeatWaitlistEntry>,
 }
