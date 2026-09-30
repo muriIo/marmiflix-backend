@@ -5,6 +5,12 @@ use crate::queue::{
 
 const CONFIRM_WINDOW_MS: u64 = 60_000;
 
+const HEATING_NOMINAL_MS: u64 = 300_000;
+
+const HEATING_URGENCY_MS: u64 = 30_000;
+
+const HEATING_WINDOW_MS: u64 = HEATING_NOMINAL_MS + HEATING_URGENCY_MS;
+
 fn normalized_name(name: &str) -> String {
     name.trim().to_lowercase()
 }
@@ -66,6 +72,43 @@ pub fn apply_leave(state: &QueueState, input: &IdentifiedInput) -> Result<QueueS
     let mut next_state = state.clone();
 
     next_state.waiting.retain(|waiting| waiting.id != input.id);
+
+    Ok(next_state)
+}
+
+pub fn apply_confirm_turn(
+    state: &QueueState,
+    input: &IdentifiedInput,
+    now: u64,
+) -> Result<QueueState, QueueError> {
+    let Some(active) = &state.active else {
+        return Err(NotFound(input.id.clone()));
+    };
+
+    if active.id != input.id {
+        return Err(NotFound(input.id.clone()));
+    }
+
+    if active.phase != ActivePhase::Confirming {
+        let phase = active.phase;
+        let message = format!(
+            "Cannot confirm turn: active entry is in \"{phase}\" phase, not \"confirming\""
+        );
+
+        return Err(WrongPhase(message));
+    }
+
+    if active.session_token_hash != input.session_token_hash {
+        return Err(Forbidden(input.id.clone()));
+    }
+
+    let mut next_state = state.clone();
+
+    if let Some(active_mut) = next_state.active.as_mut() {
+        active_mut.phase = ActivePhase::Heating;
+        active_mut.phase_started_at = now;
+        active_mut.deadline = now + HEATING_WINDOW_MS;
+    }
 
     Ok(next_state)
 }

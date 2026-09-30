@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -13,6 +15,15 @@ pub enum Phase {
 pub enum ActivePhase {
     Confirming,
     Heating,
+}
+
+impl fmt::Display for ActivePhase {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ActivePhase::Confirming => write!(f, "confirming"),
+            ActivePhase::Heating => write!(f, "heating"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
