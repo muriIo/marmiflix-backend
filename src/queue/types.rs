@@ -79,3 +79,10 @@ pub struct QueueState {
     pub waiting: Vec<WaitingEntry>,
     pub seat_waitlist: Vec<SeatWaitlistEntry>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdentifiedInput {
+    pub id: String,
+    pub session_token_hash: String,
+}

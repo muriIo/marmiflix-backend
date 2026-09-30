@@ -1,4 +1,7 @@
-use crate::queue::types::{ActiveEntry, ActivePhase, QueueState};
+use crate::queue::{
+    error::QueueError::{self, Forbidden, NotFound, WrongPhase},
+    types::{ActiveEntry, ActivePhase, IdentifiedInput, QueueState},
+};
 
 const CONFIRM_WINDOW_MS: u64 = 60_000;
 
@@ -39,4 +42,30 @@ pub fn reap_expired(state: &QueueState, now: u64) -> QueueState {
     }
 
     state.clone()
+}
+
+pub fn apply_leave(state: &QueueState, input: &IdentifiedInput) -> Result<QueueState, QueueError> {
+    if state
+        .active
+        .as_ref()
+        .is_some_and(|active| active.id == input.id)
+    {
+        return Err(WrongPhase(String::from(
+            "Cannot leave an active turn - only finishing it is supported",
+        )));
+    }
+
+    let Some(target) = state.waiting.iter().find(|waiting| waiting.id == input.id) else {
+        return Err(NotFound(input.id.clone()));
+    };
+
+    if target.session_token_hash != input.session_token_hash {
+        return Err(Forbidden(input.id.clone()));
+    }
+
+    let mut next_state = state.clone();
+
+    next_state.waiting.retain(|waiting| waiting.id != input.id);
+
+    Ok(next_state)
 }
